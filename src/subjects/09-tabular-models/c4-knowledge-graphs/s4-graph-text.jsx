@@ -158,26 +158,7 @@ print(json.dumps(expected, indent=2))`}
         code={`# Round-trip evaluation: Text -> Graph -> Text
 # Tests both extraction and generation quality
 
-def roundtrip_eval(original_text, extracted_graph, regenerated_text):
-    """Evaluate round-trip consistency."""
-    # Count triples preserved
-    num_triples = len(extracted_graph)
-
-    # Simple word overlap as a proxy for semantic similarity
-    orig_words = set(original_text.lower().split())
-    regen_words = set(regenerated_text.lower().split())
-    overlap = len(orig_words & regen_words)
-    total = len(orig_words | regen_words)
-    jaccard = overlap / total if total > 0 else 0
-
-    return {
-        "num_triples": num_triples,
-        "jaccard_similarity": round(jaccard, 3),
-        "original_length": len(original_text),
-        "regenerated_length": len(regenerated_text),
-    }
-
-# Simulate round-trip
+# Round-trip: verify text -> graph -> text preserves facts
 original = "Marie Curie won the Nobel Prize in Physics in 1903 and Chemistry in 1911."
 graph = [
     ("Marie Curie", "won", "Nobel Prize in Physics"),
@@ -199,12 +180,6 @@ print("Graph adjacency:", {h: [(r,t)] for h,r,t in graph})`}
         title="Benchmarks for Graph-Text Tasks"
         content="WebNLG is the primary benchmark for graph-to-text, containing 25,000+ (graph, text) pairs from DBpedia. KELM evaluates text-to-graph with Wikidata triples. GenWiki tests both directions. On WebNLG, fine-tuned T5-large achieves BLEU scores of ~65, while GPT-4 zero-shot reaches ~55. The gap is narrower on faithfulness metrics where LLMs excel."
         id="note-benchmarks"
-      />
-
-      <WarningBlock
-        title="Graph Serialization Order Matters"
-        content="The order in which triples are serialized affects generation quality. Grouping triples by subject entity produces more coherent text than random ordering. For text-to-graph, the extraction order can create cascading errors -- if an entity is missed early, all its relations will also be missed. Consider multiple extraction passes with different orderings."
-        id="warning-order"
       />
 
     </div>

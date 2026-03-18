@@ -128,18 +128,6 @@ for t in expected_triples:
         id="code-open-ie"
       />
 
-      <ExampleBlock
-        title="Document-Level Relation Extraction"
-        problem="Extract relations that span multiple sentences in a document, requiring coreference resolution."
-        steps={[
-          { formula: '\\text{S1: "Elon Musk founded SpaceX in 2002."}', explanation: 'Direct relation: (Elon Musk, founded, SpaceX).' },
-          { formula: '\\text{S2: "The company launched Falcon 9 in 2010."}', explanation: '"The company" refers to SpaceX (coreference). Extract: (SpaceX, launched, Falcon 9).' },
-          { formula: '\\text{S3: "He also leads Tesla, which produces electric vehicles."}', explanation: '"He" refers to Elon Musk. Extract: (Elon Musk, leads, Tesla), (Tesla, produces, electric vehicles).' },
-          { formula: '\\text{Cross-sentence: (Elon Musk, founded, SpaceX) + (SpaceX, launched, Falcon 9)}', explanation: 'Chaining relations across sentences enables multi-hop reasoning in the resulting KG.' },
-        ]}
-        id="example-doc-level"
-      />
-
       <PythonCode
         title="re_with_constraints.py"
         code={`# Constrained relation extraction with type checking
