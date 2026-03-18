@@ -203,13 +203,6 @@ if message.tool_calls:
         id="warning-security"
       />
 
-      <NoteBlock
-        type="note"
-        title="Function Calling Accuracy"
-        content="On the Berkeley Function Calling Leaderboard (BFCL), GPT-4o achieves ~90% accuracy on simple function calls but drops to ~70% for complex nested arguments and parallel calls. Open-source models like Hermes-2 and Gorilla specialize in function calling and approach GPT-4 level performance. Accuracy improves significantly with clear parameter descriptions and few-shot examples in the system prompt."
-        id="note-accuracy"
-      />
-
     </div>
   )
 }

@@ -182,13 +182,8 @@ class StableTrainer:
 
         return {"loss": l, "grad_norm": grad_norm.item()}
 
-print("\\nKey stability settings for large-scale training:")
-print("  Gradient clipping: max_norm=1.0")
-print("  Learning rate warmup: 2000 steps")
-print("  Weight decay: 0.1")
-print("  Adam beta2: 0.95 (not 0.999 for stability)")
-print("  BF16 (not FP16) when possible")
-print("  Checkpoint every 1000 steps for recovery")`}
+print("\\nKey stability settings:")
+print("  grad_clip=1.0, warmup=2000, wd=0.1, beta2=0.95, bf16=True")`}
         id="stability-code"
       />
 
@@ -201,7 +196,7 @@ print("  Checkpoint every 1000 steps for recovery")`}
       <NoteBlock
         type="tip"
         title="Pre-LN vs Post-LN"
-        content="Pre-Layer Normalization (applying LayerNorm before attention/MLP) is significantly more stable than Post-LN (applying after). Most modern LLMs use Pre-LN. Some models use RMSNorm instead of LayerNorm for additional stability and efficiency. QK-norm (normalizing query and key vectors) further stabilizes attention at large scale."
+        content="Pre-Layer Normalization (applying LayerNorm before attention/MLP) is significantly more stable than Post-LN. Most modern LLMs use Pre-LN with RMSNorm. QK-norm further stabilizes attention at large scale."
         id="preln-note"
       />
     </div>

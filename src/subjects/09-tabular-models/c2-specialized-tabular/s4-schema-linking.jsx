@@ -181,15 +181,10 @@ expected_output = {
 
 print(json.dumps(expected_output, indent=2))
 
-# The schema linking output guides SQL generation:
-sql = """SELECT c.full_name, c.email
-FROM customers c
-JOIN orders o ON c.customer_id = o.customer_id
-WHERE c.plan_type = 'premium'
-  AND o.order_date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
-GROUP BY c.customer_id, c.full_name, c.email
-HAVING SUM(o.amount) > 500;"""
-print(f"\\nGenerated SQL:\\n{sql}")`}
+# The schema linking output guides SQL generation
+print("\\nSQL guided by schema links:")
+print("SELECT c.full_name, c.email FROM customers c ...")
+`}
         id="code-llm-linking"
       />
 

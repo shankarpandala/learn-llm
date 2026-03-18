@@ -217,12 +217,6 @@ for entity, edges in adjacency.items():
         id="warning-order"
       />
 
-      <NoteBlock
-        type="intuition"
-        title="Graphs as a Universal Knowledge Interchange"
-        content="Knowledge graphs serve as a language-agnostic, modality-agnostic interchange format. Text in any language can be converted to a graph, and graphs can be verbalized into any language. This makes the graph-text bidirectional mapping a cornerstone of multilingual knowledge systems, cross-modal information extraction, and structured data integration across heterogeneous sources."
-        id="note-universal"
-      />
     </div>
   )
 }

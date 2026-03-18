@@ -195,7 +195,6 @@ print("\\n" + checklist.report())`}
         content="Start with: (1) create model cards documenting capabilities and limitations, (2) implement bias testing in your CI/CD pipeline, (3) establish an incident response process, (4) maintain an audit trail of training data and model versions, (5) provide clear AI disclosure to users, and (6) designate a responsible AI officer or team."
         id="note-practical"
       />
-
     </div>
   )
 }
