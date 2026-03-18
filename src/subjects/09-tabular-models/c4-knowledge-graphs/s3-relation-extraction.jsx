@@ -204,12 +204,6 @@ for s, r, o in triples:
         id="warning-hallucination"
       />
 
-      <NoteBlock
-        type="tip"
-        title="Iterative Extraction"
-        content="For complex documents, use iterative extraction: first pass identifies entities, second pass extracts pairwise relations for high-confidence entity pairs, third pass resolves conflicts and fills gaps. This multi-pass approach improves recall without sacrificing precision, and each pass can use a different prompt tailored to its stage."
-        id="note-iterative"
-      />
     </div>
   )
 }

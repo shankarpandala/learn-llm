@@ -196,12 +196,6 @@ def constrained_beam_search(model, tokenizer, prompt, constraint_fn,
         id="warning-semantic"
       />
 
-      <NoteBlock
-        type="note"
-        title="Performance Overhead"
-        content="The overhead of constrained decoding depends on the constraint complexity. Simple regex constraints add less than 5% latency. CFG constraints add 10-20% due to parser state tracking. JSON Schema constraints are typically 5-15%. The cost is worthwhile because it eliminates retry loops from parsing failures, which often cost more than the constraint overhead."
-        id="note-performance"
-      />
     </div>
   )
 }

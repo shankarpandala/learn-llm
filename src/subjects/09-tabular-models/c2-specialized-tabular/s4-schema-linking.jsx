@@ -206,12 +206,6 @@ print(f"\\nGenerated SQL:\\n{sql}")`}
         id="warning-ambiguity"
       />
 
-      <NoteBlock
-        type="note"
-        title="Impact on SQL Accuracy"
-        content="Research shows that schema linking accounts for 30-40% of Text-to-SQL errors. On the Spider benchmark, providing oracle schema links (telling the model exactly which tables and columns are needed) improves GPT-4 accuracy from ~85% to ~93%. This gap represents the practical ceiling that better schema linking methods can close."
-        id="note-impact"
-      />
     </div>
   )
 }
