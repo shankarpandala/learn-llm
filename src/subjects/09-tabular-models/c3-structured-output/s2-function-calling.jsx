@@ -85,26 +85,9 @@ tools = [
             }
         }
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "calculate",
-            "description": "Evaluate a mathematical expression",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "expression": {
-                        "type": "string",
-                        "description": "Mathematical expression, e.g. '2 * pi * 5.5'"
-                    }
-                },
-                "required": ["expression"]
-            }
-        }
-    }
 ]
 
-print(json.dumps(tools[1], indent=2))`}
+print(json.dumps(tools[0], indent=2))`}
         id="code-tools"
       />
 
