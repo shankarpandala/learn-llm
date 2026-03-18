@@ -95,6 +95,13 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
           >
             <HamburgerIcon />
           </button>
+          <a
+            href="https://www.pandala.in"
+            className="flex items-center font-mono text-sm text-gray-500 dark:text-gray-500 hover:opacity-80 transition-opacity select-none"
+          >
+            ~/<span className="text-[#5ce0d8]">pandala.in</span>
+          </a>
+          <span className="text-gray-300 dark:text-[#2d3a4d] select-none" aria-hidden="true">|</span>
           <Link
             to="/"
             className="flex items-center gap-1.5 font-bold text-lg tracking-tight select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
