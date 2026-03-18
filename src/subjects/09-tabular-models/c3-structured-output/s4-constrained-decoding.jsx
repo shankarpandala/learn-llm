@@ -190,12 +190,6 @@ def constrained_beam_search(model, tokenizer, prompt, constraint_fn,
         id="note-quality"
       />
 
-      <WarningBlock
-        title="Constraint Satisfaction vs. Semantic Quality"
-        content="Constrained decoding guarantees syntactic validity but not semantic correctness. A grammar-constrained JSON generator will always produce valid JSON, but the content may be nonsensical. A SQL grammar constraint ensures valid syntax but not correct semantics. Always combine structural constraints with proper prompting for content quality."
-        id="warning-semantic"
-      />
-
     </div>
   )
 }

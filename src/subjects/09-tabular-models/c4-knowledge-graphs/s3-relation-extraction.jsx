@@ -191,13 +191,6 @@ for s, r, o in triples:
         id="code-constraints"
       />
 
-      <NoteBlock
-        type="note"
-        title="Benchmarks and State of the Art"
-        content="TACRED and DocRED are the primary benchmarks for sentence-level and document-level RE respectively. GPT-4 achieves ~75% F1 on TACRED in zero-shot, compared to ~72% for supervised BERT-based models. On DocRED (requiring cross-sentence reasoning), supervised models still lead at ~65% F1, with LLMs at ~58% due to the long-context challenge."
-        id="note-benchmarks"
-      />
-
       <WarningBlock
         title="Relation Hallucination"
         content="LLMs can hallucinate plausible-sounding but incorrect relations, especially for entities they have strong prior knowledge about. For example, given text about a lesser-known 'John Smith', the model might infer relations from a famous John Smith. Always require textual evidence for extracted relations and implement confidence thresholds."
