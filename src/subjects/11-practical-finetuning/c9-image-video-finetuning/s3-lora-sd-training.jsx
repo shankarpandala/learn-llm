@@ -6,159 +6,165 @@ import NoteBlock from '../../../components/content/NoteBlock.jsx'
 import WarningBlock from '../../../components/content/WarningBlock.jsx'
 import PythonCode from '../../../components/content/PythonCode.jsx'
 
-export default function LoraSdTraining() {
+export default function LoraSDTraining() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
-      <h1 className="text-3xl font-bold">LoRA for Stable Diffusion Training</h1>
+      <h1 className="text-3xl font-bold">LoRA Training for Stable Diffusion</h1>
       <p className="text-lg text-gray-700 dark:text-gray-300">
-        LoRA for image generation applies the same low-rank adaptation technique to the UNet and
-        text encoder of Stable Diffusion models. It produces small adapter files (10-200 MB) that
-        can teach the model new concepts, styles, or characters with far less VRAM than DreamBooth.
+        LoRA is the most popular method for fine-tuning Stable Diffusion models because
+        it is fast, memory-efficient, and produces small adapter files that can be easily
+        shared and combined. This section covers training LoRA adapters for SD 1.5 and
+        SDXL to learn new styles, characters, and concepts.
       </p>
 
       <DefinitionBlock
-        title="SD LoRA Training"
-        definition="LoRA for Stable Diffusion adds low-rank matrices to the attention layers of the UNet denoiser and optionally the text encoder. The base model is frozen, and only the LoRA weights are trained. The resulting adapter file is small (10-200 MB) and can be loaded/unloaded at inference time."
-        id="def-sd-lora"
-      />
-
-      <h2 className="text-2xl font-semibold">Training with diffusers</h2>
-
-      <PythonCode
-        title="train_sd_lora.sh"
-        code={`# Using the diffusers training script for SDXL LoRA
-# Download the script from the diffusers repository
-
-export MODEL_NAME="stabilityai/stable-diffusion-xl-base-1.0"
-export DATASET_DIR="./training-images"
-export OUTPUT_DIR="./sdxl-lora-output"
-
-accelerate launch train_text_to_image_lora_sdxl.py \\
-  --pretrained_model_name_or_path=$MODEL_NAME \\
-  --train_data_dir=$DATASET_DIR \\
-  --output_dir=$OUTPUT_DIR \\
-  --resolution=1024 \\
-  --train_batch_size=1 \\
-  --gradient_accumulation_steps=4 \\
-  --learning_rate=1e-4 \\
-  --lr_scheduler="cosine" \\
-  --lr_warmup_steps=0 \\
-  --max_train_steps=1000 \\
-  --rank=32 \\
-  --mixed_precision="bf16" \\
-  --gradient_checkpointing \\
-  --enable_xformers_memory_efficient_attention \\
-  --validation_prompt="a photo of sks style landscape" \\
-  --validation_epochs=5 \\
-  --seed=42`}
-        id="code-train-sdxl-lora"
-      />
-
-      <PythonCode
-        title="kohya_ss_training.py"
-        code={`# Kohya-ss is the most popular tool for SD LoRA training
-# pip install kohya-ss or use the GUI
-
-# Kohya configuration (TOML format)
-kohya_config = {
-    # Model settings
-    "pretrained_model_name_or_path": "stabilityai/stable-diffusion-xl-base-1.0",
-    "output_dir": "./kohya-lora-output",
-    "output_name": "my_style_lora",
-
-    # Training settings
-    "resolution": "1024,1024",
-    "train_batch_size": 1,
-    "max_train_epochs": 10,
-    "learning_rate": 1e-4,
-    "unet_lr": 1e-4,
-    "text_encoder_lr": 5e-5,        # Lower LR for text encoder
-    "lr_scheduler": "cosine_with_restarts",
-    "optimizer_type": "AdamW8bit",
-
-    # LoRA settings
-    "network_module": "networks.lora",
-    "network_dim": 32,               # LoRA rank
-    "network_alpha": 16,             # LoRA alpha (alpha/rank = 0.5)
-    "network_train_unet_only": False, # Also train text encoder
-
-    # Memory optimization
-    "mixed_precision": "bf16",
-    "gradient_checkpointing": True,
-    "cache_latents": True,           # Pre-encode images with VAE
-    "cache_latents_to_disk": True,
-
-    # Regularization
-    "noise_offset": 0.0357,          # Improves contrast
-    "min_snr_gamma": 5.0,            # Min-SNR weighting
-}
-
-import json
-print(json.dumps(kohya_config, indent=2))
-
-# Launch Kohya training:
-# python sdxl_train_network.py --config_file config.toml`}
-        id="code-kohya"
-      />
-
-      <PythonCode
-        title="load_sd_lora.py"
-        code={`from diffusers import StableDiffusionXLPipeline
-import torch
-
-# Load base model
-pipe = StableDiffusionXLPipeline.from_pretrained(
-    "stabilityai/stable-diffusion-xl-base-1.0",
-    torch_dtype=torch.float16,
-    variant="fp16",
-).to("cuda")
-
-# Load your trained LoRA
-pipe.load_lora_weights("./sdxl-lora-output")
-
-# Generate with LoRA
-image = pipe(
-    prompt="a photo of sks style mountain landscape at sunset",
-    num_inference_steps=30,
-    guidance_scale=7.5,
-    cross_attention_kwargs={"scale": 0.8},  # LoRA strength (0-1)
-).images[0]
-
-image.save("lora_output.png")
-
-# Unload LoRA (back to base model)
-pipe.unload_lora_weights()
-
-# Load multiple LoRAs
-pipe.load_lora_weights("./style-lora", adapter_name="style")
-pipe.load_lora_weights("./character-lora", adapter_name="character")
-pipe.set_adapters(["style", "character"], adapter_weights=[0.7, 0.9])`}
-        id="code-load-lora"
+        title="LoRA for Diffusion Models"
+        definition="LoRA (Low-Rank Adaptation) for diffusion models applies low-rank updates to the UNet cross-attention layers and optionally the text encoder. The weight update is $W' = W + BA$ where $B \in \mathbb{R}^{d \times r}$ and $A \in \mathbb{R}^{r \times k}$ with rank $r \ll \min(d, k)$. Typical LoRA files for SDXL are 50-200 MB versus 6.5 GB for full weights."
+        id="def-lora-diffusion"
       />
 
       <ExampleBlock
-        title="LoRA vs DreamBooth for Image Models"
-        problem="When should you use LoRA vs DreamBooth for image finetuning?"
+        title="LoRA Hyperparameters for Stable Diffusion"
+        problem="What are the recommended LoRA settings for style and character training?"
         steps={[
-          { formula: '\\text{LoRA: styles, concepts, broad subjects}', explanation: 'Better for learning art styles, visual concepts, general categories (10+ images).' },
-          { formula: '\\text{DreamBooth: specific subjects, faces}', explanation: 'Better for learning one specific person, pet, or object (3-10 images).' },
-          { formula: '\\text{LoRA: 6-16 GB VRAM, 10-200 MB output}', explanation: 'Much more memory efficient. Adapter files are small and composable.' },
-          { formula: '\\text{DreamBooth: 16-24 GB VRAM, full model output}', explanation: 'Produces a full model. Higher quality for specific subjects but larger.' },
+          { formula: '\\text{Rank } r: 4\\text{-}8 \\text{ for styles, } 16\\text{-}32 \\text{ for characters}', explanation: 'Higher rank captures more detail but increases file size and overfitting risk.' },
+          { formula: '\\text{Alpha } \\alpha = r \\text{ or } 2r', explanation: 'The scaling factor. Setting alpha=rank gives effective scaling of 1.0.' },
+          { formula: '\\text{Learning rate: } 1 \\times 10^{-4} \\text{ to } 5 \\times 10^{-4}', explanation: 'Lower than LLM LoRA rates. Start with 1e-4 and adjust based on results.' },
+          { formula: '\\text{Steps: 500-2000 for style, 1000-4000 for character}', explanation: 'Fewer images need fewer steps. Monitor for overfitting every 200-500 steps.' },
         ]}
-        id="example-lora-vs-dreambooth"
+        id="example-hyperparams"
+      />
+
+      <PythonCode
+        title="train_lora_sdxl.py"
+        code={`# LoRA training for SDXL using diffusers
+# Install: pip install diffusers[training] accelerate peft
+
+TRAIN_CMD = """
+accelerate launch diffusers/examples/text_to_image/train_text_to_image_lora_sdxl.py \\
+    --pretrained_model_name_or_path="stabilityai/stable-diffusion-xl-base-1.0" \\
+    --dataset_name="./my_dataset" \\
+    --caption_column="text" \\
+    --image_column="image" \\
+    --output_dir="./sdxl-lora-output" \\
+    --resolution=1024 \\
+    --train_batch_size=1 \\
+    --gradient_accumulation_steps=4 \\
+    --num_train_epochs=100 \\
+    --learning_rate=1e-4 \\
+    --lr_scheduler="cosine" \\
+    --lr_warmup_steps=100 \\
+    --rank=16 \\
+    --seed=42 \\
+    --mixed_precision="bf16" \\
+    --gradient_checkpointing \\
+    --enable_xformers_memory_efficient_attention \\
+    --validation_prompt="a painting in the style of sks" \\
+    --validation_epochs=25 \\
+    --checkpointing_steps=500
+"""
+
+# Python API for LoRA configuration
+from peft import LoraConfig
+
+def setup_lora_training():
+    """Configure LoRA for SDXL training."""
+    unet_lora_config = LoraConfig(
+        r=16,
+        lora_alpha=16,
+        init_lora_weights="gaussian",
+        target_modules=[
+            "to_k", "to_q", "to_v", "to_out.0",
+            "proj_in", "proj_out",
+            "ff.net.0.proj", "ff.net.2",
+        ],
+    )
+
+    text_encoder_lora_config = LoraConfig(
+        r=8,
+        lora_alpha=8,
+        init_lora_weights="gaussian",
+        target_modules=["q_proj", "k_proj", "v_proj", "out_proj"],
+    )
+
+    return unet_lora_config, text_encoder_lora_config
+
+unet_config, te_config = setup_lora_training()
+print(f"UNet LoRA rank: {unet_config.r}")
+print(f"Text encoder LoRA rank: {te_config.r}")
+print(TRAIN_CMD)`}
+        id="code-train-lora"
+      />
+
+      <PythonCode
+        title="use_lora_sdxl.py"
+        code={`import torch
+from diffusers import DiffusionPipeline
+
+def load_and_generate(base_model, lora_path, prompt, lora_scale=0.8):
+    """Load a LoRA adapter and generate images."""
+    pipe = DiffusionPipeline.from_pretrained(
+        base_model, torch_dtype=torch.float16, variant="fp16"
+    ).to("cuda")
+
+    pipe.load_lora_weights(lora_path)
+
+    image = pipe(
+        prompt,
+        num_inference_steps=30,
+        guidance_scale=7.5,
+        cross_attention_kwargs={"scale": lora_scale},
+    ).images[0]
+
+    return image
+
+# Combine multiple LoRAs
+def combine_loras(base_model, lora_configs):
+    """Load and combine multiple LoRA adapters."""
+    pipe = DiffusionPipeline.from_pretrained(
+        base_model, torch_dtype=torch.float16
+    ).to("cuda")
+
+    for name, path, scale in lora_configs:
+        pipe.load_lora_weights(path, adapter_name=name)
+
+    adapter_names = [c[0] for c in lora_configs]
+    adapter_weights = [c[2] for c in lora_configs]
+    pipe.set_adapters(adapter_names, adapter_weights=adapter_weights)
+
+    return pipe
+
+# Example: combine style + character LoRAs
+pipe = combine_loras(
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    [
+        ("style", "./lora-watercolor", 0.7),
+        ("character", "./lora-my-character", 0.9),
+    ]
+)
+image = pipe("sks character in watercolor style").images[0]
+image.save("combined_lora_output.png")`}
+        id="code-use-lora"
       />
 
       <NoteBlock
         type="tip"
-        title="Caption Your Training Images"
-        content="Good captions dramatically improve LoRA quality. Use BLIP-2 or Florence-2 to auto-caption, then manually edit to include your trigger word and describe relevant details. Each caption should describe what makes the image unique."
-        id="note-captions"
+        title="Train Text Encoder Too for Characters"
+        content="For character or object concepts, training the text encoder LoRA alongside the UNet LoRA significantly improves identity preservation. For pure style transfer, UNet-only LoRA is usually sufficient."
+        id="note-text-encoder"
       />
 
       <WarningBlock
-        title="LoRA Rank for Image Models"
-        content="Image LoRA ranks are typically higher than LLM LoRA ranks. Use rank 16-64 for styles, 32-128 for characters/subjects. Higher ranks capture more detail but risk overfitting. Always save checkpoints at multiple training stages to find the sweet spot."
-        id="warning-rank"
+        title="Caption Quality Drives LoRA Quality"
+        content="The most common cause of bad LoRA results is poor captions. Every training image must have an accurate, detailed caption. Use BLIP-2 or CogVLM to auto-caption, then manually review and edit. Include the trigger word (e.g., 'sks style') in every caption."
+        id="warning-captions"
+      />
+
+      <NoteBlock
+        type="note"
+        title="LoRA File Compatibility"
+        content="LoRA files trained with diffusers can be loaded in ComfyUI, Automatic1111, and other UIs. However, the naming conventions may differ. Use safetensors format for maximum compatibility across tools."
+        id="note-compatibility"
       />
     </div>
   )

@@ -9,75 +9,74 @@ import PythonCode from '../../../components/content/PythonCode.jsx'
 export default function Benchmarks() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
-      <h1 className="text-3xl font-bold">Benchmarks: MMLU, HellaSwag, and More</h1>
+      <h1 className="text-3xl font-bold">Task-Specific Benchmarks (MMLU, HellaSwag)</h1>
       <p className="text-lg text-gray-700 dark:text-gray-300">
-        Standardized benchmarks provide quantitative measures of model capability across reasoning,
-        knowledge, and language understanding. Running these before and after finetuning reveals
-        whether your changes improved or degraded the model's general abilities.
+        Standardized benchmarks provide comparable evaluation across models. MMLU tests
+        knowledge and reasoning across 57 subjects, HellaSwag tests commonsense reasoning,
+        and many other benchmarks target specific capabilities. Running these on your
+        fine-tuned model helps detect regressions and measure improvement.
       </p>
 
       <DefinitionBlock
-        title="LLM Benchmarks"
-        definition="LLM benchmarks are standardized test suites that evaluate model capabilities through multiple-choice questions, completion tasks, or open-ended generation. Common benchmarks include MMLU (knowledge), HellaSwag (commonsense), ARC (reasoning), TruthfulQA (factuality), and GSM8K (math)."
-        id="def-benchmarks"
+        title="MMLU (Massive Multitask Language Understanding)"
+        definition="MMLU is a benchmark consisting of 14,042 multiple-choice questions spanning 57 subjects from elementary to professional level. Performance is measured as accuracy: $\text{Acc} = \frac{\text{correct answers}}{\text{total questions}}$. State-of-the-art models score above 85%, while random chance yields 25%."
+        id="def-mmlu"
+      />
+
+      <DefinitionBlock
+        title="HellaSwag"
+        definition="HellaSwag is a commonsense natural language inference benchmark where the model must select the most plausible continuation of a scenario from four choices. It tests grounded commonsense reasoning with adversarially filtered wrong answers."
+        id="def-hellaswag"
       />
 
       <ExampleBlock
-        title="Key Benchmark Suite"
-        problem="What does each benchmark measure?"
+        title="Common Benchmark Suite"
+        problem="Which benchmarks should you run after fine-tuning?"
         steps={[
-          { formula: '\\text{MMLU (57 subjects): knowledge breadth}', explanation: 'Multiple-choice questions across STEM, humanities, social science. Tests factual knowledge.' },
-          { formula: '\\text{HellaSwag: commonsense reasoning}', explanation: 'Sentence completion requiring physical and social commonsense.' },
-          { formula: '\\text{ARC: scientific reasoning}', explanation: 'Grade-school science questions. ARC-Challenge is the harder subset.' },
-          { formula: '\\text{GSM8K: math reasoning}', explanation: 'Grade-school math word problems requiring multi-step reasoning.' },
-          { formula: '\\text{TruthfulQA: factual accuracy}', explanation: 'Questions designed to test whether models repeat common misconceptions.' },
+          { formula: '\\text{MMLU: knowledge breadth}', explanation: 'Tests whether fine-tuning preserved general knowledge (watch for regression).' },
+          { formula: '\\text{HellaSwag: commonsense}', explanation: 'Tests commonsense reasoning -- should remain stable after domain fine-tuning.' },
+          { formula: '\\text{TruthfulQA: hallucination}', explanation: 'Tests whether the model generates truthful answers vs plausible-sounding falsehoods.' },
+          { formula: '\\text{HumanEval / MBPP: coding}', explanation: 'For code-focused fine-tunes, measure pass@k on code generation benchmarks.' },
+          { formula: '\\text{MT-Bench: conversation}', explanation: 'Multi-turn benchmark scored by GPT-4 to evaluate chat quality (1-10 scale).' },
         ]}
-        id="example-benchmarks"
+        id="example-benchmark-suite"
       />
 
       <PythonCode
-        title="run_lm_eval.sh"
-        code={`# lm-evaluation-harness is the standard tool for LLM benchmarks
-pip install lm-eval
+        title="run_lm_eval.py"
+        code={`# lm-evaluation-harness is the standard tool for running benchmarks
+# Install: pip install lm-eval
 
-# Run a single benchmark
-lm_eval --model hf \\
-    --model_args pretrained=./your-model,dtype=bfloat16 \\
-    --tasks mmlu \\
-    --batch_size 8 \\
-    --output_path ./eval-results
+# Run MMLU (5-shot) from command line
+# lm_eval --model hf \\
+#     --model_args pretrained=./my-finetuned-model \\
+#     --tasks mmlu \\
+#     --num_fewshot 5 \\
+#     --batch_size 4 \\
+#     --output_path ./eval_results/mmlu
 
-# Run the Open LLM Leaderboard benchmark suite
-lm_eval --model hf \\
-    --model_args pretrained=./your-model,dtype=bfloat16 \\
-    --tasks mmlu,hellaswag,arc_challenge,truthfulqa_mc2,gsm8k \\
-    --batch_size 4 \\
-    --num_fewshot 5 \\
-    --output_path ./eval-results
+# Run multiple benchmarks at once
+# lm_eval --model hf \\
+#     --model_args pretrained=./my-finetuned-model,dtype=float16 \\
+#     --tasks mmlu,hellaswag,truthfulqa_mc2,winogrande,arc_challenge \\
+#     --batch_size auto \\
+#     --output_path ./eval_results/full_suite
 
-# For QLoRA/LoRA models (load adapter on top of base)
-lm_eval --model hf \\
-    --model_args pretrained=meta-llama/Meta-Llama-3.1-8B-Instruct,\\
-peft=./your-lora-adapter,dtype=bfloat16,load_in_4bit=True \\
-    --tasks mmlu,hellaswag \\
-    --batch_size 4
+# Python API usage
+from lm_eval import evaluator
+from lm_eval.models.huggingface import HFLM
 
-# View results
-cat ./eval-results/results.json | python -m json.tool`}
-        id="code-lm-eval"
-      />
+model = HFLM(
+    pretrained="./my-finetuned-model",
+    dtype="float16",
+    batch_size=4,
+)
 
-      <PythonCode
-        title="quick_benchmark.py"
-        code={`# Quick programmatic benchmark evaluation
-import lm_eval
-
-results = lm_eval.simple_evaluate(
-    model="hf",
-    model_args="pretrained=./your-model,dtype=bfloat16",
-    tasks=["mmlu", "hellaswag"],
-    batch_size=8,
+results = evaluator.simple_evaluate(
+    model=model,
+    tasks=["mmlu", "hellaswag", "truthfulqa_mc2"],
     num_fewshot=5,
+    batch_size=4,
 )
 
 # Print results
@@ -85,49 +84,69 @@ for task, metrics in results["results"].items():
     acc = metrics.get("acc,none", metrics.get("acc_norm,none", "N/A"))
     print(f"{task}: {acc:.4f}")
 
-# Compare base vs finetuned
-def compare_models(base_path, finetuned_path, tasks):
-    """Compare two models on the same benchmarks."""
-    base_results = lm_eval.simple_evaluate(
-        model="hf",
-        model_args=f"pretrained={base_path},dtype=bfloat16",
-        tasks=tasks, batch_size=8,
-    )
-    ft_results = lm_eval.simple_evaluate(
-        model="hf",
-        model_args=f"pretrained={finetuned_path},dtype=bfloat16",
-        tasks=tasks, batch_size=8,
-    )
+# Save results to JSON
+import json
+with open("eval_results.json", "w") as f:
+    json.dump(results["results"], f, indent=2)`}
+        id="code-lm-eval"
+      />
 
-    print(f"{'Task':<20} {'Base':>8} {'Finetuned':>10} {'Delta':>8}")
-    print("-" * 50)
-    for task in tasks:
-        base_acc = base_results["results"][task].get("acc,none", 0)
-        ft_acc = ft_results["results"][task].get("acc,none", 0)
+      <PythonCode
+        title="compare_base_vs_finetuned.py"
+        code={`import json
+import os
+
+def compare_results(base_path, ft_path):
+    """Compare benchmark results between base and finetuned models."""
+    with open(base_path) as f:
+        base = json.load(f)
+    with open(ft_path) as f:
+        ft = json.load(f)
+
+    print(f"{'Benchmark':<25} {'Base':>8} {'Finetuned':>10} {'Delta':>8}")
+    print("-" * 55)
+
+    for task in base:
+        if task not in ft:
+            continue
+        base_acc = base[task].get("acc,none", base[task].get("acc_norm,none", 0))
+        ft_acc = ft[task].get("acc,none", ft[task].get("acc_norm,none", 0))
         delta = ft_acc - base_acc
-        symbol = "+" if delta > 0 else ""
-        print(f"{task:<20} {base_acc:>8.4f} {ft_acc:>10.4f} {symbol}{delta:>7.4f}")`}
-        id="code-quick-benchmark"
+        marker = "+" if delta > 0 else ""
+        print(f"{task:<25} {base_acc:>8.4f} {ft_acc:>10.4f} {marker}{delta:>7.4f}")
+
+        if delta < -0.02:
+            print(f"  ** WARNING: regression of {abs(delta)*100:.1f}% on {task}")
+
+# Example output:
+# Benchmark                     Base  Finetuned    Delta
+# -------------------------------------------------------
+# mmlu                        0.6820     0.6910  +0.0090
+# hellaswag                   0.8210     0.8250  +0.0040
+# truthfulqa_mc2              0.5100     0.5350  +0.0250
+
+compare_results("eval_results_base.json", "eval_results_ft.json")`}
+        id="code-compare"
       />
 
       <NoteBlock
         type="tip"
-        title="Benchmark Before and After"
-        content="Always run benchmarks on the base model BEFORE finetuning to establish a baseline. Then run the same benchmarks after finetuning. If general benchmarks drop significantly (>2%), you may be experiencing catastrophic forgetting -- the model is losing general knowledge while learning your task."
-        id="note-before-after"
+        title="Use the Open LLM Leaderboard Format"
+        content="If you want to submit your model to the Hugging Face Open LLM Leaderboard, run the exact tasks and settings they specify: MMLU (5-shot), HellaSwag (10-shot), TruthfulQA (0-shot), Winogrande (5-shot), GSM8K (5-shot), and ARC-Challenge (25-shot)."
+        id="note-leaderboard"
       />
 
       <WarningBlock
-        title="Benchmarks Are Not Everything"
-        content="High benchmark scores do not guarantee a good model for your use case. Benchmarks test general knowledge and reasoning, but your specific task may require domain expertise, a particular output format, or a specific tone that benchmarks do not measure. Always combine benchmarks with task-specific evaluation."
-        id="warning-benchmarks-limit"
+        title="Benchmark Contamination"
+        content="If your training data contains benchmark questions or answers, your scores will be inflated and meaningless. Always check for data contamination by searching your training set for benchmark examples. The lm-evaluation-harness has decontamination tools to help with this."
+        id="warning-contamination"
       />
 
       <NoteBlock
         type="note"
-        title="Evaluation Time"
-        content="Running the full benchmark suite takes 2-8 hours on a single GPU depending on model size and benchmarks selected. For quick iteration, run only MMLU and HellaSwag (~30 minutes). Save full evaluation for final model candidates."
-        id="note-eval-time"
+        title="Benchmark Limitations"
+        content="Multiple-choice benchmarks like MMLU test recognition rather than generation. A model might score well on MMLU but still generate poor free-form text. Use benchmarks as one signal among many, not as the sole evaluation criterion."
+        id="note-limitations"
       />
     </div>
   )

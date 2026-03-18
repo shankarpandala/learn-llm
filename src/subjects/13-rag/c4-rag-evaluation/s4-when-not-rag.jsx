@@ -108,7 +108,7 @@ def estimate_costs(n_queries_per_day, approach):
 
 for approach in ["base", "rag", "finetuned"]:
     cost = estimate_costs(1000, approach)
-    print(f"\\n{approach}: ~${cost:.2f}/day for 1000 queries")`}
+    print(f"\\n{approach}: ~USD {cost:.2f}/day for 1000 queries")`}
         id="code-decision-framework"
       />
 

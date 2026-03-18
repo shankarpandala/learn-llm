@@ -123,12 +123,10 @@ on the Alpaca-cleaned dataset for improved instruction following.
 - **Framework**: Unsloth + TRL
 
 ## Usage
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model = AutoModelForCausalLM.from_pretrained("your-username/model-name")
-tokenizer = AutoTokenizer.from_pretrained("your-username/model-name")
-```
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    model = AutoModelForCausalLM.from_pretrained("your-username/model-name")
+    tokenizer = AutoTokenizer.from_pretrained("your-username/model-name")
 
 ## Evaluation
 | Benchmark | Base Model | Finetuned |

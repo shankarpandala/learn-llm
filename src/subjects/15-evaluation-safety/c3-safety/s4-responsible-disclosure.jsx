@@ -40,7 +40,7 @@ export default function ResponsibleDisclosure() {
         problem="You discover a reproducible jailbreak that bypasses safety training on a major LLM."
         steps={[
           { formula: '\\text{1. Document: Reproduce, record steps, assess impact}', explanation: 'Create a clear, minimal reproduction case. Classify severity (information leak vs. harmful content generation).' },
-          { formula: '\\text{2. Report: Use vendor\\'s security channel}', explanation: 'Contact the AI provider via their bug bounty program, security@, or responsible disclosure policy.' },
+          { formula: '\\text{2. Report: Use vendor security channel}', explanation: 'Contact the AI provider via their bug bounty program, security@, or responsible disclosure policy.' },
           { formula: '\\text{3. Collaborate: Work with the team on verification}', explanation: 'Provide additional details if requested. Help verify that proposed fixes actually address the issue.' },
           { formula: '\\text{4. Disclosure: Coordinate timing of public write-up}', explanation: 'Agree on a disclosure timeline. Publish findings after the fix, omitting exploitation details that could cause harm.' },
         ]}

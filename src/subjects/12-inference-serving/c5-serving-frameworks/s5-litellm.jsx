@@ -120,7 +120,7 @@ print(response.choices[0].message.content)
 # Spend tracking
 from litellm import budget_manager
 cost = litellm.completion_cost(completion_response=response)
-print(f"Request cost: ${cost:.6f}")`}
+print(f"Request cost: USD {cost:.6f}")`}
         id="code-litellm-client"
       />
 

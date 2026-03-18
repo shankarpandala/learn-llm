@@ -25,7 +25,7 @@ export default function StructuredGeneration() {
       <NoteBlock
         type="intuition"
         title="How It Works"
-        content="Think of it like autocomplete with strict rules. At each token position, a finite state machine or parser tracks what tokens are valid next. If you have generated '{\"name\": \"' so far, the only valid continuations are string characters -- not a closing brace or number. The model still chooses among valid tokens using its learned distribution."
+        content={'Think of it like autocomplete with strict rules. At each token position, a finite state machine or parser tracks what tokens are valid next. If you have generated \'{"name": "\' so far, the only valid continuations are string characters -- not a closing brace or number. The model still chooses among valid tokens using its learned distribution.'}
         id="note-how-it-works"
       />
 

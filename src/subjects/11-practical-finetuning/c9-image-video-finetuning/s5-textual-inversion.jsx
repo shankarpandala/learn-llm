@@ -9,117 +9,164 @@ import PythonCode from '../../../components/content/PythonCode.jsx'
 export default function TextualInversion() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
-      <h1 className="text-3xl font-bold">Textual Inversion Training</h1>
+      <h1 className="text-3xl font-bold">Textual Inversion & Embeddings</h1>
       <p className="text-lg text-gray-700 dark:text-gray-300">
-        Textual inversion learns a new embedding vector for a concept while keeping the entire
-        model frozen. It produces the smallest possible adaptation (a single embedding file of
-        a few KB) and requires very little VRAM, making it accessible on any GPU.
+        Textual Inversion learns a new text embedding to represent a concept without
+        modifying any model weights. It is the lightest fine-tuning method, producing
+        tiny embedding files (a few KB) that can be dropped into any compatible model.
+        The trade-off is lower fidelity compared to LoRA or DreamBooth.
       </p>
 
       <DefinitionBlock
         title="Textual Inversion"
-        definition="Textual inversion optimizes a new token embedding $v^* \\in \\mathbb{R}^d$ to represent a visual concept. Given a set of images, it minimizes the diffusion loss while only updating $v^*$, keeping the UNet and text encoder frozen. The concept can then be invoked by using the associated token in prompts."
-        notation="v^* = \arg\min_v \mathbb{E}_{z,\epsilon,t} \|\ \epsilon - \epsilon_\theta(z_t, t, c(v))\ \|^2"
+        definition="Textual Inversion optimizes a new token embedding $v^*$ in the text encoder's embedding space to represent a target concept. Only the embedding vector is trained while all model weights remain frozen: $v^* = \arg\min_{v} \mathbb{E}_{x, \epsilon, t}[\|\epsilon - \epsilon_\theta(x_t, t, c_\theta(v))\|^2]$. The resulting embedding is a single vector of dimension $d = 768$ (SD 1.5) or $d = 1280$ (SDXL)."
         id="def-textual-inversion"
       />
 
-      <PythonCode
-        title="train_textual_inversion.sh"
-        code={`# Train textual inversion with diffusers
-export MODEL_NAME="stabilityai/stable-diffusion-xl-base-1.0"
-export DATA_DIR="./concept-images"
-export OUTPUT_DIR="./textual-inversion-output"
+      <ExampleBlock
+        title="When to Use Textual Inversion vs LoRA"
+        problem="How do Textual Inversion and LoRA compare?"
+        steps={[
+          { formula: '\\text{TI: 4-100 KB file size}', explanation: 'Extremely small. Can share hundreds of concepts without storage concerns.' },
+          { formula: '\\text{LoRA: 10-400 MB file size}', explanation: 'Larger but captures much more detail about the concept.' },
+          { formula: '\\text{TI: no model weight changes}', explanation: 'Works across any checkpoint using the same text encoder. Maximum compatibility.' },
+          { formula: '\\text{LoRA: modifies UNet attention}', explanation: 'Tied to the specific model architecture. Better fidelity for complex concepts.' },
+          { formula: '\\text{TI: good for styles and simple concepts}', explanation: 'Works well for art styles, textures, and simple objects. Struggles with faces.' },
+        ]}
+        id="example-ti-vs-lora"
+      />
 
-accelerate launch textual_inversion_sdxl.py \\
-  --pretrained_model_name_or_path=$MODEL_NAME \\
-  --train_data_dir=$DATA_DIR \\
-  --learnable_property="object" \\
-  --placeholder_token="<my-concept>" \\
-  --initializer_token="dog" \\
-  --resolution=1024 \\
-  --train_batch_size=1 \\
-  --gradient_accumulation_steps=4 \\
-  --max_train_steps=3000 \\
-  --learning_rate=5e-4 \\
-  --lr_scheduler="constant" \\
-  --lr_warmup_steps=0 \\
-  --output_dir=$OUTPUT_DIR \\
-  --mixed_precision="bf16" \\
-  --validation_prompt="a <my-concept> in a garden" \\
-  --validation_steps=500 \\
-  --seed=42`}
+      <PythonCode
+        title="train_textual_inversion.py"
+        code={`# Textual Inversion training with diffusers
+# Install: pip install diffusers[training] accelerate
+
+TRAIN_CMD = """
+accelerate launch diffusers/examples/textual_inversion/textual_inversion.py \\
+    --pretrained_model_name_or_path="stabilityai/stable-diffusion-xl-base-1.0" \\
+    --train_data_dir="./data/my_concept" \\
+    --learnable_property="style" \\
+    --placeholder_token="<my-style>" \\
+    --initializer_token="painting" \\
+    --resolution=512 \\
+    --train_batch_size=1 \\
+    --gradient_accumulation_steps=4 \\
+    --max_train_steps=3000 \\
+    --learning_rate=5e-4 \\
+    --lr_scheduler="constant" \\
+    --lr_warmup_steps=0 \\
+    --output_dir="./textual-inversion-output" \\
+    --save_steps=500 \\
+    --mixed_precision="bf16"
+"""
+
+# Python API for initialization
+from diffusers import StableDiffusionPipeline
+import torch
+
+def setup_textual_inversion(model_name, placeholder_token, init_token):
+    """Initialize a new token for textual inversion."""
+    pipe = StableDiffusionPipeline.from_pretrained(
+        model_name, torch_dtype=torch.float16
+    )
+    tokenizer = pipe.tokenizer
+    text_encoder = pipe.text_encoder
+
+    num_added = tokenizer.add_tokens(placeholder_token)
+    print(f"Added {num_added} token(s): '{placeholder_token}'")
+
+    text_encoder.resize_token_embeddings(len(tokenizer))
+
+    token_id = tokenizer.convert_tokens_to_ids(placeholder_token)
+    init_id = tokenizer.convert_tokens_to_ids(init_token)
+
+    embeds = text_encoder.get_input_embeddings().weight.data
+    embeds[token_id] = embeds[init_id].clone()
+    print(f"Initialized '{placeholder_token}' from '{init_token}'")
+
+    return pipe, token_id
+
+pipe, token_id = setup_textual_inversion(
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    "<watercolor-sketch>",
+    "watercolor"
+)
+print(TRAIN_CMD)`}
         id="code-train-ti"
       />
 
       <PythonCode
         title="use_textual_inversion.py"
-        code={`from diffusers import StableDiffusionXLPipeline
-import torch
+        code={`import torch
+from diffusers import StableDiffusionXLPipeline
 
-# Load pipeline
-pipe = StableDiffusionXLPipeline.from_pretrained(
-    "stabilityai/stable-diffusion-xl-base-1.0",
-    torch_dtype=torch.float16,
-).to("cuda")
+def load_textual_inversion(model_name, embedding_path, token_name):
+    """Load a textual inversion embedding and generate images."""
+    pipe = StableDiffusionXLPipeline.from_pretrained(
+        model_name, torch_dtype=torch.float16
+    ).to("cuda")
 
-# Load textual inversion embedding
-pipe.load_textual_inversion(
-    "./textual-inversion-output",
-    token="<my-concept>",
-)
+    pipe.load_textual_inversion(embedding_path, token=token_name)
 
-# Generate images using the learned concept
-prompts = [
-    "a <my-concept> sitting on a beach at sunset",
-    "a painting of <my-concept> in the style of Van Gogh",
-    "a <my-concept> wearing a top hat, studio photography",
-]
+    prompts = [
+        f"a landscape in {token_name}",
+        f"a portrait of a cat in {token_name}",
+        f"a cityscape at sunset in {token_name}",
+    ]
 
-for i, prompt in enumerate(prompts):
+    images = []
+    for prompt in prompts:
+        image = pipe(
+            prompt, num_inference_steps=30, guidance_scale=7.5,
+        ).images[0]
+        images.append(image)
+        safe_name = prompt[:30].replace(" ", "_")
+        image.save(f"ti_{safe_name}.png")
+
+    return images
+
+# Combine multiple embeddings
+def combine_embeddings(model_name, embeddings):
+    """Load multiple TI embeddings into one pipeline."""
+    pipe = StableDiffusionXLPipeline.from_pretrained(
+        model_name, torch_dtype=torch.float16
+    ).to("cuda")
+
+    for path, token in embeddings:
+        pipe.load_textual_inversion(path, token=token)
+
     image = pipe(
-        prompt=prompt,
+        "a <my-style> portrait with <my-lighting> effects",
         num_inference_steps=30,
-        guidance_scale=7.5,
     ).images[0]
-    image.save(f"ti_output_{i}.png")
-    print(f"Generated: {prompt}")
+    return image
 
-# Combine with LoRA
-# pipe.load_lora_weights("./style-lora")
-# image = pipe("a <my-concept> in anime style").images[0]`}
+load_textual_inversion(
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    "./textual-inversion-output/learned_embeds.safetensors",
+    "<my-style>"
+)`}
         id="code-use-ti"
-      />
-
-      <ExampleBlock
-        title="Textual Inversion vs LoRA vs DreamBooth"
-        problem="How does textual inversion compare to other image finetuning methods?"
-        steps={[
-          { formula: '\\text{TI: 1-10 KB output, 4-8 GB VRAM}', explanation: 'Smallest adapter. Learns a concept embedding only. Limited expressiveness.' },
-          { formula: '\\text{LoRA: 10-200 MB output, 8-16 GB VRAM}', explanation: 'Medium adapter. Modifies attention layers. Good balance of quality and efficiency.' },
-          { formula: '\\text{DreamBooth: full model, 16-24 GB VRAM}', explanation: 'Largest output. Modifies all weights. Best quality for specific subjects.' },
-          { formula: '\\text{TI best for: styles, textures, simple concepts}', explanation: 'When you need minimal file size and maximum compatibility.' },
-        ]}
-        id="example-ti-comparison"
       />
 
       <NoteBlock
         type="tip"
-        title="Initializer Token"
-        content="Choose an initializer token that is semantically close to your concept. For a specific dog breed, use 'dog'. For an art style, use 'painting' or 'art'. The initializer gives the optimization a good starting point, leading to faster and better convergence."
-        id="note-initializer"
+        title="Initialize from a Related Token"
+        content="Always initialize the new embedding from a semantically related token. For a style, use 'painting' or 'art'. For a dog breed, use 'dog'. This gives the optimization a much better starting point and typically converges in fewer steps."
+        id="note-init-token"
       />
 
       <WarningBlock
-        title="Limited Expressiveness"
-        content="Textual inversion can only learn what can be expressed through a single embedding vector. It struggles with complex subjects like specific faces or detailed objects. For those, use LoRA or DreamBooth. TI works best for styles, textures, and simple visual concepts."
-        id="warning-limited"
+        title="Textual Inversion Limitations"
+        content="Textual Inversion can only capture what is expressible in the text embedding space. It cannot learn new visual patterns that the model has never seen. Complex subjects like specific faces or intricate patterns will not be captured well. Use LoRA or DreamBooth for high-fidelity subject preservation."
+        id="warning-ti-limits"
       />
 
       <NoteBlock
         type="note"
-        title="Composability"
-        content="Textual inversion embeddings are fully composable: you can use multiple learned tokens in the same prompt, combine them with LoRAs, and they work across different checkpoints of the same model family. This makes them ideal for building a library of reusable concepts."
-        id="note-composability"
+        title="Multi-Vector Embeddings"
+        content="Some implementations allow learning multiple embedding vectors per concept (e.g., 4-8 vectors instead of 1). This increases capacity at the cost of using more of the prompt token budget. Specify --num_vectors=4 in the training script to enable this."
+        id="note-multi-vector"
       />
     </div>
   )

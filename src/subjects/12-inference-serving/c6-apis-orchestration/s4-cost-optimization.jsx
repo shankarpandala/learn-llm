@@ -68,10 +68,10 @@ class CostTracker:
         return sum(c["cost"] for c in self.costs)
 
     def report(self):
-        print(f"Total cost: ${self.total():.4f}")
+        print(f"Total cost: USD {self.total():.4f}")
         print(f"Requests: {len(self.costs)}")
         for model, cost in sorted(self.by_model.items(), key=lambda x: -x[1]):
-            print(f"  {model}: ${cost:.4f}")
+            print(f"  {model}: USD {cost:.4f}")
 
 tracker = CostTracker()
 

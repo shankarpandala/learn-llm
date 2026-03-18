@@ -6,153 +6,155 @@ import NoteBlock from '../../../components/content/NoteBlock.jsx'
 import WarningBlock from '../../../components/content/WarningBlock.jsx'
 import PythonCode from '../../../components/content/PythonCode.jsx'
 
-export default function AbTesting() {
+export default function ABTesting() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
-      <h1 className="text-3xl font-bold">A/B Testing Finetuned Models</h1>
+      <h1 className="text-3xl font-bold">A/B Testing Fine-tuned Models</h1>
       <p className="text-lg text-gray-700 dark:text-gray-300">
-        When you have multiple finetuned model candidates, A/B testing provides a systematic way
-        to determine which performs better on real-world tasks. This section covers both offline
-        comparison and online A/B testing strategies.
+        A/B testing compares two model variants under real-world conditions by routing
+        traffic between them and measuring user-facing metrics. It is the definitive way
+        to determine whether a fine-tuned model improves production outcomes compared to
+        the baseline.
       </p>
 
       <DefinitionBlock
-        title="A/B Testing for LLMs"
-        definition="A/B testing for LLMs compares two or more model variants on the same set of prompts. Responses are evaluated through automated metrics, LLM judges, or human reviewers. Statistical significance testing ensures observed differences are real, not due to random variation."
+        title="A/B Testing for Models"
+        definition="A/B testing (split testing) randomly assigns users or requests to one of two model variants and compares outcome metrics. Statistical significance is determined using hypothesis testing: given $n_A$ and $n_B$ samples with success rates $p_A$ and $p_B$, we compute $z = \frac{p_B - p_A}{\sqrt{p(1-p)(1/n_A + 1/n_B)}}$ where $p$ is the pooled rate."
         id="def-ab-testing"
       />
 
-      <h2 className="text-2xl font-semibold">Offline Model Comparison</h2>
-
-      <PythonCode
-        title="ab_testing_offline.py"
-        code={`import random
-import json
-from collections import defaultdict
-
-class ModelComparison:
-    """Compare two models on a set of test prompts."""
-
-    def __init__(self, model_a, model_b, tokenizer_a, tokenizer_b):
-        self.models = {"A": model_a, "B": model_b}
-        self.tokenizers = {"A": tokenizer_a, "B": tokenizer_b}
-        self.results = []
-
-    def generate_response(self, model_key, prompt, max_tokens=512):
-        model = self.models[model_key]
-        tokenizer = self.tokenizers[model_key]
-        messages = [{"role": "user", "content": prompt}]
-        inputs = tokenizer.apply_chat_template(
-            messages, tokenize=True, add_generation_prompt=True,
-            return_tensors="pt"
-        ).to(model.device)
-        outputs = model.generate(
-            input_ids=inputs, max_new_tokens=max_tokens,
-            temperature=0.7, do_sample=True,
-        )
-        return tokenizer.decode(outputs[0][inputs.shape[1]:],
-                                 skip_special_tokens=True)
-
-    def run_comparison(self, prompts):
-        for prompt in prompts:
-            resp_a = self.generate_response("A", prompt)
-            resp_b = self.generate_response("B", prompt)
-
-            # Randomize order to prevent position bias
-            if random.random() > 0.5:
-                self.results.append({
-                    "prompt": prompt,
-                    "first": resp_a, "first_model": "A",
-                    "second": resp_b, "second_model": "B",
-                })
-            else:
-                self.results.append({
-                    "prompt": prompt,
-                    "first": resp_b, "first_model": "B",
-                    "second": resp_a, "second_model": "A",
-                })
-
-        return self.results
-
-    def compute_win_rate(self, judgments):
-        """Compute win rates from judge results."""
-        wins = defaultdict(int)
-        for j in judgments:
-            wins[j["winner"]] += 1
-        total = len(judgments)
-        print(f"Model A wins: {wins['A']/total*100:.1f}%")
-        print(f"Model B wins: {wins['B']/total*100:.1f}%")
-        print(f"Ties: {wins.get('tie', 0)/total*100:.1f}%")
-
-# Usage:
-# comp = ModelComparison(model_a, model_b, tok_a, tok_b)
-# results = comp.run_comparison(test_prompts)
-# comp.compute_win_rate(judge_results)`}
-        id="code-ab-offline"
-      />
-
-      <PythonCode
-        title="statistical_significance.py"
-        code={`import numpy as np
-from scipy import stats
-
-def compute_significance(wins_a, wins_b, ties=0):
-    """Test if the difference in win rates is statistically significant."""
-    total = wins_a + wins_b + ties
-    n = wins_a + wins_b  # Exclude ties
-
-    if n == 0:
-        print("No clear winners to compare")
-        return
-
-    # Binomial test: is win_rate_A significantly different from 0.5?
-    p_value = stats.binomtest(wins_a, n, p=0.5).pvalue
-
-    win_rate_a = wins_a / n
-    # 95% confidence interval
-    ci = stats.proportion_confint(wins_a, n, alpha=0.05, method="wilson")
-
-    print(f"Win rate A: {win_rate_a:.1%} (95% CI: {ci[0]:.1%}-{ci[1]:.1%})")
-    print(f"Win rate B: {1-win_rate_a:.1%}")
-    print(f"P-value: {p_value:.4f}")
-    print(f"Significant at p<0.05: {'Yes' if p_value < 0.05 else 'No'}")
-
-    # Rule of thumb: need at least 100 comparisons for reliable results
-    min_needed = int(4 / (0.1**2))  # For detecting 10% difference
-    print(f"Minimum comparisons needed (10% effect): ~{min_needed}")
-
-# Example: Model A won 62/100, Model B won 38/100
-compute_significance(wins_a=62, wins_b=38)
-# Win rate A: 62.0% (95% CI: 52.2%-70.9%)
-# P-value: 0.0214
-# Significant at p<0.05: Yes`}
-        id="code-significance"
-      />
-
       <ExampleBlock
-        title="A/B Testing Checklist"
-        problem="What is a reliable A/B testing procedure for finetuned models?"
+        title="Designing a Model A/B Test"
+        problem="What metrics should you track when A/B testing a fine-tuned model?"
         steps={[
-          { formula: '\\text{1. Fix test set (100+ prompts)}', explanation: 'Use the same diverse prompts for both models. Cover all use cases.' },
-          { formula: '\\text{2. Randomize presentation order}', explanation: 'Shuffle which model response appears first to avoid position bias.' },
-          { formula: '\\text{3. Blind evaluation}', explanation: 'Evaluators should not know which model produced which response.' },
-          { formula: '\\text{4. Multiple evaluation criteria}', explanation: 'Score helpfulness, accuracy, and style separately, not just overall preference.' },
-          { formula: '\\text{5. Statistical significance test}', explanation: 'Use binomial test with p<0.05 threshold. Need ~100 comparisons minimum.' },
+          { formula: '\\text{Primary: task completion rate}', explanation: 'Did the user accomplish their goal? This is the most important signal.' },
+          { formula: '\\text{Latency: } t_{\\text{p50}}, t_{\\text{p95}}, t_{\\text{p99}}', explanation: 'Response time percentiles -- a better model is useless if too slow.' },
+          { formula: '\\text{User satisfaction: thumbs up/down ratio}', explanation: 'Direct feedback signal from users interacting with the model.' },
+          { formula: '\\text{Engagement: follow-up rate, session length}', explanation: 'Indirect signals of quality -- users engage more with better models.' },
         ]}
-        id="example-ab-checklist"
+        id="example-ab-metrics"
+      />
+
+      <PythonCode
+        title="ab_test_router.py"
+        code={`import random
+import time
+import json
+from dataclasses import dataclass, asdict
+from typing import Optional
+
+@dataclass
+class ABTestConfig:
+    experiment_name: str
+    model_a: str  # control (base/current model)
+    model_b: str  # treatment (fine-tuned model)
+    traffic_split: float = 0.5  # fraction going to model_b
+    min_samples: int = 1000
+
+class ABTestRouter:
+    def __init__(self, config: ABTestConfig):
+        self.config = config
+        self.results = {"model_a": [], "model_b": []}
+
+    def route_request(self, request_id: str) -> str:
+        """Deterministically route request to model A or B."""
+        bucket = hash(request_id) % 100
+        if bucket < self.config.traffic_split * 100:
+            return self.config.model_b
+        return self.config.model_a
+
+    def log_result(self, request_id: str, model: str, latency: float,
+                   success: bool, user_rating: Optional[int] = None):
+        key = "model_b" if model == self.config.model_b else "model_a"
+        self.results[key].append({
+            "request_id": request_id,
+            "latency": latency,
+            "success": success,
+            "user_rating": user_rating,
+            "timestamp": time.time(),
+        })
+
+    def compute_significance(self):
+        """Compute statistical significance of A/B test results."""
+        import numpy as np
+        from scipy import stats
+
+        a_success = [r["success"] for r in self.results["model_a"]]
+        b_success = [r["success"] for r in self.results["model_b"]]
+
+        n_a, n_b = len(a_success), len(b_success)
+        p_a = sum(a_success) / n_a
+        p_b = sum(b_success) / n_b
+        p_pool = (sum(a_success) + sum(b_success)) / (n_a + n_b)
+
+        se = (p_pool * (1 - p_pool) * (1/n_a + 1/n_b)) ** 0.5
+        z = (p_b - p_a) / se if se > 0 else 0
+        p_value = 2 * (1 - stats.norm.cdf(abs(z)))
+
+        return {
+            "model_a_rate": p_a, "model_b_rate": p_b,
+            "lift": (p_b - p_a) / p_a if p_a > 0 else 0,
+            "z_score": z, "p_value": p_value,
+            "significant": p_value < 0.05,
+            "n_a": n_a, "n_b": n_b,
+        }
+
+config = ABTestConfig(
+    experiment_name="llama3-finetune-v2",
+    model_a="./base-model",
+    model_b="./finetuned-model",
+    traffic_split=0.2,
+)
+router = ABTestRouter(config)`}
+        id="code-ab-router"
+      />
+
+      <PythonCode
+        title="ab_test_analysis.py"
+        code={`import numpy as np
+
+def analyze_ab_test(results_a, results_b, metric="success"):
+    """Analyze A/B test results and print summary."""
+    vals_a = [r[metric] for r in results_a if metric in r]
+    vals_b = [r[metric] for r in results_b if metric in r]
+
+    print(f"{'Metric':<20} {'Model A':>10} {'Model B':>10}")
+    print("-" * 42)
+    print(f"{'N samples':<20} {len(vals_a):>10} {len(vals_b):>10}")
+    print(f"{'Mean':<20} {np.mean(vals_a):>10.4f} {np.mean(vals_b):>10.4f}")
+    print(f"{'Std':<20} {np.std(vals_a):>10.4f} {np.std(vals_b):>10.4f}")
+
+    lat_a = [r["latency"] for r in results_a]
+    lat_b = [r["latency"] for r in results_b]
+    print(f"{'Latency p50':<20} {np.percentile(lat_a, 50):>10.3f}s"
+          f" {np.percentile(lat_b, 50):>10.3f}s")
+    print(f"{'Latency p95':<20} {np.percentile(lat_a, 95):>10.3f}s"
+          f" {np.percentile(lat_b, 95):>10.3f}s")
+
+def required_sample_size(baseline_rate, mde, alpha=0.05, power=0.8):
+    """Minimum samples per group to detect minimum detectable effect."""
+    from scipy.stats import norm
+    z_a = norm.ppf(1 - alpha / 2)
+    z_b = norm.ppf(power)
+    p1, p2 = baseline_rate, baseline_rate + mde
+    n = ((z_a + z_b) ** 2 * (p1*(1-p1) + p2*(1-p2))) / mde**2
+    return int(np.ceil(n))
+
+print(f"Samples needed for 2% MDE: {required_sample_size(0.75, 0.02)}")`}
+        id="code-ab-analysis"
       />
 
       <NoteBlock
         type="tip"
-        title="Use Chatbot Arena Method"
-        content="The Chatbot Arena (lmsys.org) methodology is gold standard: show two anonymous responses side by side, let humans pick the better one, and compute Elo ratings. You can replicate this internally using a simple web app with Gradio."
-        id="note-arena"
+        title="Start with Low Traffic"
+        content="Begin with 5-10% traffic on the new model and ramp up gradually. This limits blast radius if the fine-tuned model has unexpected failure modes. Only go to 50/50 after initial metrics look stable."
+        id="note-low-traffic"
       />
 
       <WarningBlock
-        title="Sample Size Matters"
-        content="With only 20 comparisons, a 60/40 win rate is NOT statistically significant (p=0.12). You need at least 100 comparisons to detect a 10% difference reliably. For small differences (55/45), you may need 400+ comparisons. Plan your evaluation budget accordingly."
-        id="warning-sample-size"
+        title="Do Not Peek at Results"
+        content="Checking results repeatedly and stopping the test early when you see a positive signal inflates false positive rates (the peeking problem). Pre-register your sample size and significance threshold before starting. Use sequential testing methods if you must monitor continuously."
+        id="warning-peeking"
       />
     </div>
   )
