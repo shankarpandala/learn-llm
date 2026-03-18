@@ -190,17 +190,7 @@ regenerated = "Marie Curie was awarded the Nobel Prize in Physics in 1903 and th
 metrics = roundtrip_eval(original, graph, regenerated)
 print(f"Round-trip metrics: {json.dumps(metrics, indent=2)}")
 
-# Build adjacency list from triples
-from collections import defaultdict
-adjacency = defaultdict(list)
-for h, r, t in graph:
-    adjacency[h].append((r, t))
-
-print("\\nGraph adjacency list:")
-for entity, edges in adjacency.items():
-    print(f"  {entity}:")
-    for rel, target in edges:
-        print(f"    --[{rel}]--> {target}")`}
+print("Graph adjacency:", {h: [(r,t)] for h,r,t in graph})`}
         id="code-roundtrip"
       />
 
