@@ -210,12 +210,6 @@ if message.tool_calls:
         id="note-accuracy"
       />
 
-      <NoteBlock
-        type="intuition"
-        title="Function Calling as Structured Output"
-        content="Function calling is fundamentally structured output generation with a specific schema (function name + arguments). The model is trained to recognize when a user's request maps to an available tool and to produce the correct JSON arguments. This is why providers that support structured outputs can often implement function calling as a special case of schema-constrained generation."
-        id="note-relationship"
-      />
     </div>
   )
 }

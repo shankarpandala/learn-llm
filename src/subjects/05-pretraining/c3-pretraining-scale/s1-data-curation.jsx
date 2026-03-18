@@ -117,7 +117,7 @@ class DataCurationPipeline:
             passed, reason = self.quality_filter(doc)
             if not passed:
                 self.stats["reasons"][reason] = \
-                    self.stats["reasons"].get(reason", 0) + 1
+                    self.stats["reasons"].get(reason, 0) + 1
                 continue
             self.stats["passed"] += 1
             results.append(doc)

@@ -196,12 +196,6 @@ print("\\n" + checklist.report())`}
         id="note-practical"
       />
 
-      <NoteBlock
-        type="historical"
-        title="Timeline of AI Governance"
-        content="2018: EU publishes Ethics Guidelines for Trustworthy AI. 2021: EU proposes AI Act. 2023: US Executive Order on AI Safety; UK AI Safety Summit; China's generative AI regulations. 2024: EU AI Act adopted; AI Safety Institutes established. The pace of governance activity continues to accelerate."
-        id="note-timeline"
-      />
     </div>
   )
 }

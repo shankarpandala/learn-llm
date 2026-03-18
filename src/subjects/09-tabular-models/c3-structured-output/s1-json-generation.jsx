@@ -193,12 +193,6 @@ print(json.dumps(product_search_schema, indent=2))`}
         id="warning-limitations"
       />
 
-      <NoteBlock
-        type="note"
-        title="How Structured Outputs Work Internally"
-        content="Providers like OpenAI implement structured outputs using constrained decoding: at each generation step, tokens that would make the output invalid according to the schema are masked (set to -infinity logits). This guarantees validity without post-processing, but means the model's effective vocabulary is reduced at each step, which can occasionally impact the quality of the content within the valid structure."
-        id="note-internals"
-      />
     </div>
   )
 }
