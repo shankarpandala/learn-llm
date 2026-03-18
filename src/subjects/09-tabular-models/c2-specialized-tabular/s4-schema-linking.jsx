@@ -88,18 +88,6 @@ def semantic_match(question, column_descriptions):
                 break
     return links
 
-def fuzzy_match(question_tokens, schema, threshold=0.7):
-    """Find fuzzy matches using string similarity."""
-    links = []
-    words = question_tokens.lower().split()
-    for table, columns in schema.items():
-        for col in columns:
-            for word in words:
-                ratio = SequenceMatcher(None, word, col).ratio()
-                if ratio >= threshold and ratio < 1.0:
-                    links.append(("fuzzy", word, f"{table}.{col}", ratio))
-    return links
-
 # Example
 question = "How many workers earn over 100k in the engineering team?"
 print(f"Question: {question}\\n")
@@ -108,8 +96,7 @@ for link in exact_match(question, schema):
     print(f"  Exact: '{link[1]}' -> {link[2]}")
 for link in semantic_match(question, column_descriptions):
     print(f"  Semantic: '{link[1]}' -> {link[2]}")
-for link in fuzzy_match(question, schema):
-    print(f"  Fuzzy: '{link[1]}' -> {link[2]} ({link[3]:.2f})")`}
+`}
         id="code-linking"
       />
 
